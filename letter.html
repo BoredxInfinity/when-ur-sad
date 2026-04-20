@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You 🎀</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --crimson: #8b0000;
+    --deep-red: #5c0000;
+    --blush: #ffb6c1;
+    --pale-pink: #ffe4e8;
+    --ink: #1a0000;
+    --cream: #fff8f8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Caveat', cursive;
+    position: relative;
+  }
+
+  /* ── Floating Bows ── */
+  .bows-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bow {
+    position: absolute;
+    opacity: 0;
+    animation: floatBow linear infinite;
+    filter: drop-shadow(0 0 6px rgba(255,182,193,0.4));
+  }
+
+  @keyframes floatBow {
+    0%   { transform: translateY(105vh) rotate(0deg);  opacity: 0.7; }
+    90%  { opacity: 0.6; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* ── Scene wrapper ── */
+  #scene {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  /* ── Envelope ── */
+  #envelope-wrap {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    transition: transform 0.2s;
+  }
+  #envelope-wrap:hover { transform: scale(1.04); }
+  #envelope-wrap:hover .click-label { letter-spacing: 3px; }
+
+  .click-label {
+    color: var(--blush);
+    font-size: 1.5rem;
+    font-family: 'Caveat', cursive;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: letter-spacing 0.3s;
+    text-shadow: 0 0 20px rgba(255,182,193,0.6);
+  }
+
+  /* SVG envelope container */
+  #env-svg-wrap {
+    position: relative;
+    width: 260px;
+    height: 180px;
+    filter: drop-shadow(0 8px 32px rgba(139,0,0,0.5));
+  }
+
+  /* ── Letter ── */
+  #letter-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  #letter-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  #letter-paper {
+    background: var(--cream);
+    width: min(620px, 92vw);
+    max-height: 82vh;
+    border-radius: 3px;
+    padding: 52px 56px 52px 56px;
+    overflow-y: auto;
+    position: relative;
+    box-shadow:
+      0 2px 0 #ddd,
+      0 4px 0 #ccc,
+      0 25px 60px rgba(0,0,0,0.7),
+      inset 0 0 80px rgba(255,220,220,0.3);
+    transform: translateY(80px) scale(0.9);
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s;
+    opacity: 0;
+
+    /* lined paper effect */
+    background-image:
+      linear-gradient(var(--cream) 0%, var(--cream) 100%),
+      repeating-linear-gradient(
+        transparent,
+        transparent 31px,
+        rgba(139,0,0,0.12) 31px,
+        rgba(139,0,0,0.12) 32px
+      );
+    background-blend-mode: normal;
+    line-height: 32px;
+  }
+
+  #letter-overlay.visible #letter-paper {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  #letter-paper::-webkit-scrollbar { width: 6px; }
+  #letter-paper::-webkit-scrollbar-track { background: transparent; }
+  #letter-paper::-webkit-scrollbar-thumb { background: rgba(139,0,0,0.3); border-radius: 3px; }
+
+  .letter-content {
+    font-family: 'Caveat', cursive;
+    font-size: 1.25rem;
+    color: #2a0000;
+    font-weight: 400;
+  }
+
+  .letter-content p { margin-bottom: 1.1em; }
+
+  .letter-salutation {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--crimson);
+    margin-bottom: 1.2em;
+  }
+
+  .letter-sign {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--crimson);
+    margin-top: 1.5em;
+    text-align: right;
+  }
+
+  /* close button */
+  #close-btn {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Caveat', cursive;
+    font-size: 1.1rem;
+    color: rgba(139,0,0,0.5);
+    transition: color 0.2s;
+    padding: 4px 8px;
+  }
+  #close-btn:hover { color: var(--crimson); }
+
+  /* bow decoration removed */
+
+  /* ── Envelope open animation ── */
+  #envelope-wrap.opening {
+    animation: envPop 0.5s forwards;
+  }
+  @keyframes envPop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.1); }
+    100% { transform: scale(0) translateY(40px); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating bows background -->
+<div class="bows-layer" id="bows"></div>
+
+<div id="scene">
+  <!-- Envelope -->
+  <div id="envelope-wrap" onclick="openEnvelope()">
+    <div id="env-svg-wrap">
+      <svg viewBox="0 0 260 180" xmlns="http://www.w3.org/2000/svg" width="260" height="180">
+        <!-- envelope body -->
+        <rect x="2" y="30" width="256" height="148" rx="6" ry="6"
+              fill="white" stroke="#e8d0d0" stroke-width="1.5"/>
+        <!-- envelope bottom flaps -->
+        <polygon points="2,178 130,100 258,178" fill="#f5e8e8" stroke="#e0c8c8" stroke-width="1"/>
+        <!-- left flap -->
+        <polygon points="2,30 130,100 2,178" fill="#fdf0f0" stroke="#e8d0d0" stroke-width="1"/>
+        <!-- right flap -->
+        <polygon points="258,30 130,100 258,178" fill="#fdf0f0" stroke="#e8d0d0" stroke-width="1"/>
+        <!-- top flap (closed) -->
+        <polygon id="env-flap" points="2,30 130,105 258,30" fill="white" stroke="#e8d0d0" stroke-width="1.5"
+                 style="transform-origin: 130px 30px; transition: transform 0.4s ease;"/>
+        <!-- wax seal -->
+        <circle cx="130" cy="100" r="16" fill="#8b0000" opacity="0.9"/>
+        <text x="130" y="105" text-anchor="middle" font-size="14" fill="#ffe4e8">🎀</text>
+      </svg>
+    </div>
+    <span class="click-label">Click to Open ♡</span>
+  </div>
+</div>
+
+<!-- Letter overlay -->
+<div id="letter-overlay">
+  <div id="letter-paper">
+    <button id="close-btn" onclick="closeLetter()">close ✕</button>
+    <div class="letter-content">
+      <div class="letter-salutation">Dear [Name],</div>
+
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+
+      <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p>
+
+      <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae. Proin vel ante a orci tempus eleifend ut et magna. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus urna sed urna ultricies ac tempor dui sagittis.</p>
+
+      <p>In condimentum facilisis porta. Sed nec diam eu diam mattis viverra. Nulla fringilla, orci ac euismod semper, magna diam porttitor mauris, quis sollicitudin sapien justo in libero. Vestibulum mollis mauris enim. Morbi euismod magna ac lorem rutrum elementum.</p>
+
+      <p>Donec viverra mi quis quam pulvinar at malesuada arcu rhoncus. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. In rutrum accumsan ultricies. Mauris vitae nisi at sem facilisis semper ac in est.</p>
+
+      <p>Vivamus fermentum semper porta. Nunc diam velit, adipiscing ut tristique vitae, sagittis vel odio. Maecenas convallis ullamcorper ultriciel salutationem. Curabitur et ligula. Ut molestie a, ultricies porta urna. Vestibulum commodo volutpat a, convallis ac, laoreet enim. Phasellus fermentum in, dolor.</p>
+
+      <p>Pellentesque facilisis. Nulla imperdiet sit amet magna. Vestibulum dapibus, mauris nec malesuada fames ac turpis velit, rhoncus eu, luctus et interdum adipiscing wisi. Aliquam erat ac ipsum. Integer aliquam purus at ipsum vehicula adipiscing. Curabitur et ligula. Ut molestie a, ultricies porta urna.</p>
+
+      <div class="letter-sign">With all my love, 🎀<br>[Your Name]</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── Generate floating bows ── */
+  const bowSVG = (size, hue) => `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 60 60">
+      <!-- left loop -->
+      <ellipse cx="18" cy="30" rx="16" ry="10" fill="${hue}" transform="rotate(-20,18,30)" opacity="0.9"/>
+      <ellipse cx="18" cy="30" rx="10" ry="5" fill="rgba(255,255,255,0.25)" transform="rotate(-20,18,30)"/>
+      <!-- right loop -->
+      <ellipse cx="42" cy="30" rx="16" ry="10" fill="${hue}" transform="rotate(20,42,30)" opacity="0.9"/>
+      <ellipse cx="42" cy="30" rx="10" ry="5" fill="rgba(255,255,255,0.25)" transform="rotate(20,42,30)"/>
+      <!-- left tail -->
+      <path d="M28,33 Q12,50 8,54" stroke="${hue}" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <!-- right tail -->
+      <path d="M32,33 Q48,50 52,54" stroke="${hue}" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <!-- center knot -->
+      <ellipse cx="30" cy="30" rx="6" ry="6" fill="${hue}" filter="url(#knot-shadow)"/>
+      <ellipse cx="30" cy="30" rx="3" ry="3" fill="rgba(255,255,255,0.4)"/>
+    </svg>
+  `;
+
+  const bowColors = ['#ffb6c1','#ff8fa3','#ffccd5','#ff6b8a','#ffd6dd'];
+  const layer = document.getElementById('bows');
+
+  for (let i = 0; i < 22; i++) {
+    const size = 28 + Math.random() * 44;
+    const color = bowColors[Math.floor(Math.random() * bowColors.length)];
+    const div = document.createElement('div');
+    div.className = 'bow';
+    div.innerHTML = bowSVG(size, color);
+    div.style.left = (Math.random() * 100) + 'vw';
+    div.style.bottom = '-80px';
+    const duration = 12 + Math.random() * 18;
+    div.style.animationDuration = duration + 's';
+    div.style.animationDelay = (-Math.random() * duration) + 's';
+    layer.appendChild(div);
+  }
+
+  /* ── Envelope open ── */
+  function openEnvelope() {
+    const wrap = document.getElementById('envelope-wrap');
+    wrap.classList.add('opening');
+    setTimeout(() => {
+      wrap.style.display = 'none';
+      document.getElementById('letter-overlay').classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }, 460);
+  }
+
+  function closeLetter() {
+    const overlay = document.getElementById('letter-overlay');
+    overlay.classList.remove('visible');
+    setTimeout(() => {
+      const wrap = document.getElementById('envelope-wrap');
+      wrap.style.display = 'flex';
+      wrap.classList.remove('opening');
+      wrap.style.animation = 'none';
+      wrap.style.transform = '';
+      wrap.style.opacity = '';
+      void wrap.offsetWidth; // reflow
+    }, 400);
+    document.body.style.overflow = '';
+  }
+
+  /* close on backdrop click */
+  document.getElementById('letter-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeLetter();
+  });
+</script>
+</body>
+</html>
